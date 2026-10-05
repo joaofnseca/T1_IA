@@ -245,12 +245,6 @@ def tela_jogo():
         if not a:
             st.info("Faça uma jogada para ver a análise.")
         else:
-            st.write("**Entrada enviada** (x=1, o=-1, b=0):")
-            grade = pd.DataFrame(
-                [a["entrada"][0:3], a["entrada"][3:6], a["entrada"][6:9]],
-                index=["sup", "meio", "inf"], columns=["esq", "centro", "dir"])
-            st.dataframe(grade, use_container_width=True)
-
             st.write("**Classe analisada:**")
             st.success(ROTULO_CLASSE.get(a["classe"], a["classe"]))
 
