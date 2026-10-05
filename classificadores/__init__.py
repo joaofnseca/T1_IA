@@ -18,7 +18,7 @@ def descobrir():
     """Retorna lista ordenada de dicts: {chave, nome, modulo}."""
     encontrados = []
     for info in pkgutil.iter_modules([str(_PASTA)]):
-        if not info.name.startswith("algoritmo_"):
+        if info.name.startswith("_"):
             continue
         try:
             mod = importlib.import_module(f"{__name__}.{info.name}")
