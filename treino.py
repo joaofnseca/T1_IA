@@ -26,14 +26,17 @@ from sklearn.base import clone
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
 from sklearn.model_selection import train_test_split
 
-# dataset de referência vem do pacote_padrao (pasta anterior)
+# dataset de referência vem do pacote_padrao do projeto
 RAIZ = Path(__file__).resolve().parent
-DATASET = RAIZ.parent / "pacote_padrao" / "dataset_final.csv"
+DATASET = RAIZ / "pacote_padrao" / "dataset_final.csv"
 
 CASAS = ["sup_esq", "sup_meio", "sup_dir", "meio_esq", "centro",
          "meio_dir", "inf_esq", "inf_meio", "inf_dir"]
 CLASSES = ["tem_jogo", "x_venceu", "o_venceu", "empate"]
-MAPA = {"x": 1, "o": -1, "b": 0}
+MAPA = {
+    "x": 1, "o": -1, "b": 0,
+    "1": 1, "-1": -1, "0": 0,
+}
 SEMENTE = 42
 
 
