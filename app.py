@@ -200,9 +200,10 @@ def tela_treino():
     if "n_teste" in r:
         c3.metric("Amostras de teste", r["n_teste"])
 
-    if all(chave in r for chave in ("n_treino", "n_teste", "linhas_usadas")):
+    if all(chave in r for chave in ("n_treino", "n_validacao", "n_teste", "linhas_usadas")):
         st.caption(
             f"Split estratificado — treino: {r['n_treino']} · "
+            f"validação: {r['n_validacao']} · "
             f"teste: {r['n_teste']} · total: {r['linhas_usadas']}"
         )
 
