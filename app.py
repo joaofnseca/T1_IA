@@ -55,14 +55,16 @@ def init_estado():
 
 
 @st.cache_resource(show_spinner=False)
-def obter_modelo_treinado(chave: str, n_linhas: int):
-    """Treina uma vez por (classificador, n_linhas) e reutiliza o modelo nas partidas."""
+def obter_modelo_treinado(chave: str, n_linhas: int, abordagem: str):
+    """Treina uma vez por (classificador, n_linhas, abordagem) e reutiliza o modelo nas partidas."""
     algoritmo = next(
         item for item in classificadores.descobrir() if item["chave"] == chave
     )
     modulo = algoritmo["modulo"]
     import inspect
     sig = inspect.signature(modulo.treinar_e_avaliar)
+    if "abordagem" in sig.parameters:
+        return modulo.treinar_e_avaliar(n_linhas=n_linhas, abordagem=abordagem)
     if "n_linhas" in sig.parameters:
         return modulo.treinar_e_avaliar(n_linhas=n_linhas)
     return modulo.treinar_e_avaliar()
@@ -86,7 +88,9 @@ def analisar():
     if modelo is None or classificador is None:
         return
     tab = st.session_state.tab
-    classe, probs = classificador["modulo"].classificar(modelo, tab)
+    classe, probs = classificador["modulo"].classificar(
+        modelo, tab, st.session_state.config.get("abordagem", "A")
+    )
     st.session_state.analise = {
         "classe": classe,
         "probs": probs,
@@ -140,6 +144,16 @@ def tela_setup():
             options=list(opcoes),
             format_func=lambda chave: opcoes[chave],
         )
+        abordagem = st.radio(
+            "Abordagem de pré-processamento",
+            ["A", "B"],
+            format_func=lambda a: (
+                "A — tabuleiro bruto (9 features: x=1, o=-1, b=0)"
+                if a == "A" else
+                "B — features derivadas (7 features: qtd, linhas, jogador da vez)"
+            ),
+            horizontal=True,
+        )
         total = treino.total_linhas_dataset()
         n_linhas = st.slider(
             "Quantas linhas do dataset usar no treinamento",
@@ -164,7 +178,7 @@ def tela_setup():
         )
         try:
             with st.spinner(f"Treinando {algoritmo['nome']}…"):
-                modelo, relatorio = obter_modelo_treinado(algoritmo_escolhido, n_linhas)
+                modelo, relatorio = obter_modelo_treinado(algoritmo_escolhido, n_linhas, abordagem)
         except Exception as erro:
             st.error(f"Não foi possível treinar {algoritmo['nome']}: {erro}")
             return
@@ -176,6 +190,7 @@ def tela_setup():
             "dificuldade": dificuldade,
             "jogador": jogador,
             "algoritmo": algoritmo["nome"],
+            "abordagem": abordagem,
         }
         st.session_state.fase = "treinado"
         st.rerun()
@@ -186,10 +201,12 @@ def tela_setup():
 # ===========================================================================
 def tela_treino():
     r = st.session_state.relatorio
-    st.title(f"✅ {st.session_state.config['algoritmo']} treinado e avaliado")
+    cfg = st.session_state.config
+    ab = cfg.get("abordagem", r.get("abordagem", "A"))
+    st.title(f"✅ {cfg['algoritmo']} treinado e avaliado")
     st.caption(
-        "A avaliação abaixo usa um "
-        "conjunto de teste separado, que não participou do treinamento."
+        f"Abordagem **{ab}** · "
+        "conjunto de teste separado, não participou do treinamento."
     )
 
     c1, c2, c3 = st.columns(3)

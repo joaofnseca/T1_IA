@@ -26,10 +26,10 @@ def criar():
     return modelo, grade
 
 
-def treinar_e_avaliar(n_linhas=None):
+def treinar_e_avaliar(n_linhas=None, abordagem="A"):
     modelo, grade = criar()
-    return treino.treinar(modelo, grade, n_linhas)
+    return treino.treinar(modelo, grade, n_linhas, abordagem)
 
 
-def classificar(modelo, tabuleiro):
-    return treino.classificar(modelo, tabuleiro)
+def classificar(modelo, tabuleiro, abordagem="A"):
+    return treino.classificar(modelo, tabuleiro, abordagem)
