@@ -1,7 +1,16 @@
-from sklearn.neighbors import KNeighborsClassifier
+"""
+ALGORITMO 1 — (a preencher pelo grupo)
 
-NOME = "KNN (exemplo — troque pela sua implementação)"
+Veja o contrato completo em algoritmo_1.py. Resumo:
 
+    NOME = "Nome do algoritmo exibido no front"
 
-def criar():
-    return KNeighborsClassifier(), {"n_neighbors": [1, 3, 5, 7]}
+    def criar():
+        # retorna (modelo_sklearn, grade_de_hiperparametros)
+        ...
+
+Entrada: Abordagem A (9 valores x=1/o=-1/b=0). Classes: tem_jogo, x_venceu,
+o_venceu, empate.
+"""
+
+# Arquivo intencionalmente vazio. Implemente NOME e criar() aqui.
