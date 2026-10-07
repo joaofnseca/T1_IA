@@ -15,6 +15,7 @@ import streamlit as st
 
 import classificadores
 import jogo
+import treino
 
 ROTULOS = ["nao_terminou", "terminou"]
 NOMES_ROTULOS = ["Não terminou", "Terminou"]
@@ -54,12 +55,16 @@ def init_estado():
 
 
 @st.cache_resource(show_spinner=False)
-def obter_modelo_treinado(chave: str):
-    """Treina uma vez por classificador e reutiliza o modelo nas partidas."""
+def obter_modelo_treinado(chave: str, n_linhas: int):
+    """Treina uma vez por (classificador, n_linhas) e reutiliza o modelo nas partidas."""
     algoritmo = next(
         item for item in classificadores.descobrir() if item["chave"] == chave
     )
     modulo = algoritmo["modulo"]
+    import inspect
+    sig = inspect.signature(modulo.treinar_e_avaliar)
+    if "n_linhas" in sig.parameters:
+        return modulo.treinar_e_avaliar(n_linhas=n_linhas)
     return modulo.treinar_e_avaliar()
 
 
@@ -135,6 +140,12 @@ def tela_setup():
             options=list(opcoes),
             format_func=lambda chave: opcoes[chave],
         )
+        total = treino.total_linhas_dataset()
+        n_linhas = st.slider(
+            "Quantas linhas do dataset usar no treinamento",
+            min_value=min(200, total), max_value=total, value=total, step=10,
+        )
+        st.caption(f"Dataset: **{total}** linhas disponíveis em `dataset_final.csv`.")
         enviar = st.form_submit_button("Treinar e avaliar ▶", type="primary")
 
     if enviar:
@@ -153,7 +164,7 @@ def tela_setup():
         )
         try:
             with st.spinner(f"Treinando {algoritmo['nome']}…"):
-                modelo, relatorio = obter_modelo_treinado(algoritmo_escolhido)
+                modelo, relatorio = obter_modelo_treinado(algoritmo_escolhido, n_linhas)
         except Exception as erro:
             st.error(f"Não foi possível treinar {algoritmo['nome']}: {erro}")
             return
@@ -196,10 +207,11 @@ def tela_treino():
         )
 
     if "matriz_confusao" in r:
+        rotulos_cm = r.get("classes", NOMES_ROTULOS)
         cm = pd.DataFrame(
             r["matriz_confusao"],
-            index=NOMES_ROTULOS,
-            columns=NOMES_ROTULOS,
+            index=rotulos_cm,
+            columns=rotulos_cm,
         )
         with st.expander("Matriz de confusão e relatório por classe (teste)"):
             st.write("Linhas = classe real · Colunas = classe prevista")

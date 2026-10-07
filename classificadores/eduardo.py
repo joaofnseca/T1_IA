@@ -1,16 +1,35 @@
-"""
-ALGORITMO 4 — (a preencher pelo grupo)
+"""Classificador AdaBoost para os estados do jogo da velha."""
 
-Veja o contrato completo em algoritmo_1.py. Resumo:
+import sys
+from pathlib import Path
 
-    NOME = "Nome do algoritmo exibido no front"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-    def criar():
-        # retorna (modelo_sklearn, grade_de_hiperparametros)
-        ...
+import treino
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
 
-Entrada: Abordagem A (9 valores x=1/o=-1/b=0). Classes: tem_jogo, x_venceu,
-o_venceu, empate.
-"""
+NOME = "AdaBoost"
 
-# Arquivo intencionalmente vazio. Implemente NOME e criar() aqui.
+
+def criar():
+    """Retorna o modelo e a grade usada pela rotina comum de treinamento."""
+    modelo = AdaBoostClassifier(
+        estimator=DecisionTreeClassifier(random_state=42),
+        random_state=42,
+    )
+    grade = {
+        "n_estimators": [50, 100, 200],
+        "learning_rate": [0.5, 1.0],
+        "estimator__max_depth": [1, 2],
+    }
+    return modelo, grade
+
+
+def treinar_e_avaliar(n_linhas=None):
+    modelo, grade = criar()
+    return treino.treinar(modelo, grade, n_linhas)
+
+
+def classificar(modelo, tabuleiro):
+    return treino.classificar(modelo, tabuleiro)
