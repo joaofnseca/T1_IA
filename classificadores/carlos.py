@@ -1,8 +1,14 @@
 from sklearn.neighbors import KNeighborsClassifier
- 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import treino
+
 NOME = "k-NN (k vizinhos mais próximos)"
- 
- 
+
+
 def criar():
     modelo = KNeighborsClassifier(algorithm="brute")
     grade = {
@@ -11,3 +17,12 @@ def criar():
         "metric": ["hamming", "manhattan", "euclidean"],
     }
     return modelo, grade
+
+
+def treinar_e_avaliar(n_linhas=None):
+    modelo, grade = criar()
+    return treino.treinar(modelo, grade, n_linhas)
+
+
+def classificar(modelo, tabuleiro):
+    return treino.classificar(modelo, tabuleiro)
