@@ -209,13 +209,15 @@ def tela_treino():
         "conjunto de teste separado, não participou do treinamento."
     )
 
-    c1, c2, c3 = st.columns(3)
-    if "f1_macro_teste" in r:
-        c1.metric("F1-macro (teste)", f"{r['f1_macro_teste']:.3f}")
+    c1, c2, c3, c4 = st.columns(4)
     if "acuracia_teste" in r:
-        c2.metric("Acurácia (teste)", f"{r['acuracia_teste']:.3f}")
-    if "n_teste" in r:
-        c3.metric("Amostras de teste", r["n_teste"])
+        c1.metric("Acurácia", f"{r['acuracia_teste']:.3f}")
+    if "relatorio_classes" in r:
+        rep = r["relatorio_classes"]
+        c2.metric("Precision (macro)", f"{rep['macro avg']['precision']:.3f}")
+        c3.metric("Recall (macro)", f"{rep['macro avg']['recall']:.3f}")
+    if "f1_macro_teste" in r:
+        c4.metric("F1-macro", f"{r['f1_macro_teste']:.3f}")
 
     if all(chave in r for chave in ("n_treino", "n_validacao", "n_teste", "linhas_usadas")):
         st.caption(
@@ -224,6 +226,21 @@ def tela_treino():
             f"teste: {r['n_teste']} · total: {r['linhas_usadas']}"
         )
 
+    if "relatorio_classes" in r:
+        rep = r["relatorio_classes"]
+        classes_exibir = [c for c in rep if c not in ("accuracy", "macro avg", "weighted avg")]
+        linhas = []
+        for cls in classes_exibir:
+            linhas.append({
+                "Classe": cls,
+                "Precision": round(rep[cls]["precision"], 3),
+                "Recall": round(rep[cls]["recall"], 3),
+                "F1": round(rep[cls]["f1-score"], 3),
+                "Suporte": int(rep[cls]["support"]),
+            })
+        with st.expander("Métricas por classe (teste)"):
+            st.dataframe(pd.DataFrame(linhas).set_index("Classe"), use_container_width=True)
+
     if "matriz_confusao" in r:
         rotulos_cm = r.get("classes", NOMES_ROTULOS)
         cm = pd.DataFrame(
@@ -231,13 +248,9 @@ def tela_treino():
             index=rotulos_cm,
             columns=rotulos_cm,
         )
-        with st.expander("Matriz de confusão e relatório por classe (teste)"):
+        with st.expander("Matriz de confusão (teste)"):
             st.write("Linhas = classe real · Colunas = classe prevista")
             st.dataframe(cm, use_container_width=True)
-            if "relatorio_classes" in r:
-                st.dataframe(
-                    pd.DataFrame(r["relatorio_classes"]).T, use_container_width=True
-                )
 
     if "loss_curve" in r:
         with st.expander("Evolução da perda durante o treinamento"):
