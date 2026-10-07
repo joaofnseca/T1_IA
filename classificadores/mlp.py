@@ -10,6 +10,6 @@ def treinar_e_avaliar():
     return chies_MLP.treinar_e_avaliar()
 
 
-def classificar(modelo, tabuleiro):
+def classificar(modelo, tabuleiro, abordagem="A"):
     """Devolve a classe binária e as probabilidades para um tabuleiro."""
     return chies_MLP.classificar(modelo, tabuleiro)
