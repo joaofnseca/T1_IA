@@ -1,16 +1,59 @@
-"""
-ALGORITMO 1 — (a preencher pelo grupo)
+import sys
+from pathlib import Path
 
-Veja o contrato completo em algoritmo_1.py. Resumo:
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-    NOME = "Nome do algoritmo exibido no front"
+import treino
+from sklearn.tree import DecisionTreeClassifier
 
-    def criar():
-        # retorna (modelo_sklearn, grade_de_hiperparametros)
-        ...
 
-Entrada: Abordagem A (9 valores x=1/o=-1/b=0). Classes: tem_jogo, x_venceu,
-o_venceu, empate.
-"""
+NOME = "Árvore de Decisão"
 
-# Arquivo intencionalmente vazio. Implemente NOME e criar() aqui.
+
+def criar():
+    modelo = DecisionTreeClassifier(
+        random_state=42
+    )
+
+    grade = {
+    "criterion": [
+        "gini"
+    ],
+
+    "max_depth": [
+        None,
+        15,
+        20
+    ],
+
+    "min_samples_split": [
+        2,
+        5,
+        10,
+        15,
+        20,
+        30
+    ],
+
+    "min_samples_leaf": [
+        1,
+        2,
+        5
+    ], 
+    
+    "class_weight": [
+    None,
+    "balanced"
+    ]
+
+}
+    return modelo, grade
+
+
+def treinar_e_avaliar(n_linhas=None, abordagem="A"):
+    modelo, grade = criar()
+    return treino.treinar(modelo, grade, n_linhas, abordagem)
+
+
+def classificar(modelo, tabuleiro, abordagem="A"):
+    return treino.classificar(modelo, tabuleiro,abordagem)
