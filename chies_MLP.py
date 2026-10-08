@@ -1,8 +1,4 @@
-"""Treina e avalia uma MLP para classificar o estado do jogo da velha."""
-
-from pathlib import Path
-
-import pandas as pd
+import numpy as np
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -13,28 +9,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-
-
-DATASET = Path(__file__).resolve().parent / "dataset_final_numerico.csv"
+ 
+import treino
+ 
+ 
 SEMENTE = 42
 FRACAO_TESTE = 0.20
-
-COLUNAS_TABULEIRO = [
-    "sup_esq", "sup_meio", "sup_dir",
-    "meio_esq", "centro", "meio_dir",
-    "inf_esq", "inf_meio", "inf_dir",
-]
+ 
 CLASSES = ["tem_jogo", "x_venceu", "o_venceu", "empate"]
-MAPA = {"x": 1, "o": -1, "b": 0}
-
-
-def carregar_dados(caminho: Path = DATASET):
-    dados = pd.read_csv(caminho)
-    X = dados[COLUNAS_TABULEIRO].apply(pd.to_numeric, errors="raise")
-    y = dados["classe"]
+ 
+ 
+def carregar_dados(n_linhas=None, abordagem="A"):
+    """Lê o dataset já traduzido para a abordagem escolhida (A ou B)."""
+    X, y, _ = treino._carregar(n_linhas, abordagem)
     return X, y
-
-
+ 
+ 
 def criar_modelo() -> Pipeline:
     return Pipeline(
         steps=[
@@ -55,36 +45,37 @@ def criar_modelo() -> Pipeline:
             ),
         ]
     )
-
-
-def traduzir_tabuleiro(tabuleiro: list[str]) -> pd.DataFrame:
-    return pd.DataFrame(
-        [[MAPA[c] for c in tabuleiro]], columns=COLUNAS_TABULEIRO
-    )
-
-
+ 
+ 
+def traduzir_tabuleiro(tabuleiro: list[str], abordagem="A") -> np.ndarray:
+    return np.array([treino.traduzir_tabuleiro(tabuleiro, abordagem)], dtype=float)
+ 
+ 
 def classificar(modelo: Pipeline, tabuleiro: list[str], abordagem="A") -> tuple[str, dict]:
-    entrada = traduzir_tabuleiro(tabuleiro)
+    entrada = traduzir_tabuleiro(tabuleiro, abordagem)
     classe = str(modelo.predict(entrada)[0])
     probabilidades = modelo.predict_proba(entrada)[0]
     classes = modelo.named_steps["mlp"].classes_
     return classe, dict(zip(classes, probabilidades))
-
-
-def treinar_e_avaliar() -> tuple[Pipeline, dict]:
-    X, y = carregar_dados()
-
+ 
+ 
+def treinar_e_avaliar(n_linhas=None, abordagem="A") -> tuple[Pipeline, dict]:
+    X, y = carregar_dados(n_linhas, abordagem)
+    X = np.asarray(X, dtype=float)
+ 
+    _, contagens = np.unique(y, return_counts=True)
+    estratifica = y if contagens.min() >= 2 else None
     X_treino, X_teste, y_treino, y_teste = train_test_split(
         X, y,
         test_size=FRACAO_TESTE,
         random_state=SEMENTE,
-        stratify=y,
+        stratify=estratifica,
     )
-
+ 
     modelo_teste = criar_modelo()
     modelo_teste.fit(X_treino, y_treino)
     previsoes = modelo_teste.predict(X_teste)
-
+ 
     metricas = {
         "linhas_usadas": len(X),
         "n_treino": len(X_treino),
@@ -101,8 +92,9 @@ def treinar_e_avaliar() -> tuple[Pipeline, dict]:
             output_dict=True,
         ),
         "classes": CLASSES,
+        "abordagem": abordagem,
     }
-
+ 
     modelo_jogo = criar_modelo()
     modelo_jogo.fit(X, y)
     metricas["loss_curve"] = modelo_jogo.named_steps["mlp"].loss_curve_
